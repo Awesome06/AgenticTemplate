@@ -17,7 +17,7 @@ if (-not (Test-Path ".agent/.registry/skill-map.json")) {
     git submodule update --init --recursive
     if (-not (Test-Path ".agent/.registry/skill-map.json")) {
         try {
-            git submodule add https://github.com/Awesome06/agent-skills-vault.git .agent/.registry
+            git submodule add --force https://github.com/Awesome06/agent-skills-vault.git .agent/.registry
         } catch {
             Write-Warning "Could not automatically add submodule. If offline or uncommitted, run 'git submodule update --init' later."
         }

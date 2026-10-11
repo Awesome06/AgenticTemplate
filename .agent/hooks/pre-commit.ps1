@@ -37,9 +37,11 @@ if (Test-Path $activeSkillsPath) {
 
 $requiredSkills = @()
 
-# Scan root signatures directly from map properties
+# Scan repository signatures directly from map properties (root and subdirectories)
 foreach ($prop in $map.psobject.properties) {
     if (Test-Path $prop.Name) {
+        $requiredSkills += $prop.Value
+    } elseif (-not $prop.Name.EndsWith("/") -and (Get-ChildItem -Path "." -Filter $prop.Name -Recurse -File -Depth 4 -ErrorAction SilentlyContinue | Select-Object -First 1)) {
         $requiredSkills += $prop.Value
     }
 }
@@ -54,6 +56,9 @@ if (-not (Test-Path $skillsDir)) {
 foreach ($req in $requiredSkills) {
     if ($req -notin $state.active_skills) {
         $folderName = Split-Path $req -Leaf
+        $globalSkills = @('code-review', 'doc-sync', 'error-discipline', 'git-release', 'security-auditor', 'test-discipline', 'workspace-initializer')
+        if ($folderName -in $globalSkills) { continue }
+
         $linkPath = Join-Path $skillsDir $folderName
         $targetPath = Join-Path $repoRoot ".agent\.registry\$req"
 
