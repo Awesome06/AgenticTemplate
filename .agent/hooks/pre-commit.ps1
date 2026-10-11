@@ -56,8 +56,8 @@ if (-not (Test-Path $skillsDir)) {
 foreach ($req in $requiredSkills) {
     if ($req -notin $state.active_skills) {
         $folderName = Split-Path $req -Leaf
-        $globalSkills = @('code-review', 'doc-sync', 'error-discipline', 'git-release', 'security-auditor', 'test-discipline', 'workspace-initializer')
-        if ($folderName -in $globalSkills) { continue }
+        $globalSkills = @('code-review', 'doc-sync', 'error-discipline', 'git-release', 'incident-triaging', 'security-auditor', 'test-discipline', 'workspace-initializer')
+        if ($folderName -in $globalSkills -or (Test-Path (Join-Path $repoRoot ".agent\.registry\globals\$folderName"))) { continue }
 
         $linkPath = Join-Path $skillsDir $folderName
         $targetPath = Join-Path $repoRoot ".agent\.registry\$req"

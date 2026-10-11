@@ -24,9 +24,44 @@ if (-not (Test-Path ".agent/.registry/skill-map.json")) {
             Write-Warning "Could not automatically add submodule. If offline or uncommitted, run 'git submodule update --init' later."
         }
     }
+} else {
+    Write-Host "Updating .agent/.registry submodule..." -ForegroundColor Gray
+    git submodule update --remote --recursive 2>$null
 }
 
-# 3. Configure Git pre-commit hook
+# 3. Synchronize Global Skills to Antigravity Global Config (~/.gemini/config/skills)
+$homeDir = if ($env:USERPROFILE) { $env:USERPROFILE } else { $HOME }
+$globalConfigSkills = Join-Path $homeDir ".gemini\config\skills"
+$registryGlobalsDir = Join-Path $repoRoot ".agent\.registry\globals"
+
+if (Test-Path $registryGlobalsDir) {
+    if (-not (Test-Path $globalConfigSkills)) {
+        New-Item -ItemType Directory -Path $globalConfigSkills -Force | Out-Null
+    }
+
+    $globalSkills = Get-ChildItem -Path $registryGlobalsDir -Directory
+    foreach ($globalSkill in $globalSkills) {
+        $skillName = $globalSkill.Name
+        $targetSkillPath = $globalSkill.FullName
+        $linkSkillPath = Join-Path $globalConfigSkills $skillName
+
+        if (-not (Test-Path $linkSkillPath)) {
+            Write-Host "Linking global skill -> $skillName" -ForegroundColor Cyan
+            try {
+                New-Item -ItemType SymbolicLink -Path $linkSkillPath -Target $targetSkillPath -ErrorAction Stop | Out-Null
+            } catch {
+                if ($IsWindows -or ($env:OS -like "*Windows*")) {
+                    cmd.exe /c mklink /J "$linkSkillPath" "$targetSkillPath" | Out-Null
+                } else {
+                    ln -s "$targetSkillPath" "$linkSkillPath"
+                }
+            }
+        }
+    }
+    Write-Host "Global skills verified in $globalConfigSkills." -ForegroundColor Green
+}
+
+# 4. Configure Git pre-commit hook
 $hooksDir = ".git/hooks"
 $gitHookPath = "$hooksDir/pre-commit"
 
@@ -61,7 +96,7 @@ if (Test-Path $gitHookPath) {
     Write-Host "Created pre-commit hook with Antigravity sync (LF encoded)." -ForegroundColor Green
 }
 
-# 4. Run initial skill discovery immediately
+# 5. Run initial skill discovery immediately
 if (Test-Path ".agent/hooks/pre-commit.ps1") {
     Write-Host "Running initial skill synchronization..." -ForegroundColor Cyan
     & ".agent/hooks/pre-commit.ps1"

@@ -19,6 +19,10 @@ if command -v jq >/dev/null 2>&1; then
         if [ -e "$trigger" ]; then
             for skill in $(jq -r --arg t "$trigger" '.[$t][]' "$REGISTRY_MAP"); do
                 folder_name=$(basename "$skill")
+                # Skip global skills
+                if [ -d "$REPO_ROOT/.agent/.registry/globals/$folder_name" ]; then
+                    continue
+                fi
                 target="$REPO_ROOT/.agent/.registry/$skill"
                 link="$SKILLS_DIR/$folder_name"
                 if [ -d "$target" ] && [ ! -e "$link" ]; then
