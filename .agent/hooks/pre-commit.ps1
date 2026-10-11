@@ -1,11 +1,17 @@
 #!/usr/bin/env pwsh
-# .git/hooks/pre-commit
+# .agent/hooks/pre-commit.ps1
 # Analyzes the repo for new language signatures and syncs agent skills before committing.
+
+# Ensure we are operating from the repository root
+$repoRoot = git rev-parse --show-toplevel
+if ($LASTEXITCODE -ne 0) { exit 0 }
+Set-Location -Path $repoRoot
 
 $registryMapPath = ".agent\.registry\skill-map.json"
 $activeSkillsPath = ".agent\.active-skills.json"
 $skillsDir = ".agent\skills"
 
+# Exit silently if the vault isn't vendored yet
 if (-Not (Test-Path $registryMapPath)) { exit 0 }
 
 $map = Get-Content $registryMapPath | ConvertFrom-Json
@@ -16,7 +22,7 @@ if (Test-Path $activeSkillsPath) {
 
 $requiredSkills = @()
 
-# Scan repo for trigger files
+# Scan repo for trigger files (e.g., go.mod, package.json)
 foreach ($signature in $map.signatures.psobject.properties) {
     if (Test-Path $signature.Name) {
         $requiredSkills += $signature.Value
@@ -26,18 +32,20 @@ $requiredSkills = $requiredSkills | Select-Object -Unique
 
 $driftDetected = $false
 
-# Identify missing skills
+# Identify missing skills and create symlinks
 foreach ($req in $requiredSkills) {
     if ($req -notin $currentSkills) {
-        Write-Host "Syncing new agent skill: $req"
+        Write-Host "Antigravity Sync: Linking new skill -> $req"
         
         $folderName = Split-Path $req -Leaf
         $targetPath = "..\.registry\$req"
         $linkPath = "$skillsDir\$folderName"
         
-        if (-Not (Test-Path $skillsDir)) { New-Item -ItemType Directory -Path $skillsDir | Out-Null }
+        if (-Not (Test-Path $skillsDir)) { 
+            New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null 
+        }
         
-        # Create Windows symlink
+        # Create Windows symlink (Requires Developer Mode enabled in Windows Settings)
         New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetPath -Force | Out-Null
         
         $currentSkills += $req
@@ -48,7 +56,7 @@ foreach ($req in $requiredSkills) {
 # Apply and stage updates if drift occurred
 if ($driftDetected) {
     $currentSkills | ConvertTo-Json | Set-Content $activeSkillsPath
-    Write-Host "Agent skills updated. Staging tracker..."
+    Write-Host "Antigravity Sync: Agent skills updated. Staging tracker..."
     
     # Stage the hidden state file so it is included in the commit that triggered this hook
     git add $activeSkillsPath
