@@ -1,0 +1,57 @@
+#!/usr/bin/env pwsh
+# .git/hooks/pre-commit
+# Analyzes the repo for new language signatures and syncs agent skills before committing.
+
+$registryMapPath = ".agent\.registry\skill-map.json"
+$activeSkillsPath = ".agent\.active-skills.json"
+$skillsDir = ".agent\skills"
+
+if (-Not (Test-Path $registryMapPath)) { exit 0 }
+
+$map = Get-Content $registryMapPath | ConvertFrom-Json
+$currentSkills = @()
+if (Test-Path $activeSkillsPath) {
+    $currentSkills = Get-Content $activeSkillsPath | ConvertFrom-Json
+}
+
+$requiredSkills = @()
+
+# Scan repo for trigger files
+foreach ($signature in $map.signatures.psobject.properties) {
+    if (Test-Path $signature.Name) {
+        $requiredSkills += $signature.Value
+    }
+}
+$requiredSkills = $requiredSkills | Select-Object -Unique
+
+$driftDetected = $false
+
+# Identify missing skills
+foreach ($req in $requiredSkills) {
+    if ($req -notin $currentSkills) {
+        Write-Host "Syncing new agent skill: $req"
+        
+        $folderName = Split-Path $req -Leaf
+        $targetPath = "..\.registry\$req"
+        $linkPath = "$skillsDir\$folderName"
+        
+        if (-Not (Test-Path $skillsDir)) { New-Item -ItemType Directory -Path $skillsDir | Out-Null }
+        
+        # Create Windows symlink
+        New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetPath -Force | Out-Null
+        
+        $currentSkills += $req
+        $driftDetected = $true
+    }
+}
+
+# Apply and stage updates if drift occurred
+if ($driftDetected) {
+    $currentSkills | ConvertTo-Json | Set-Content $activeSkillsPath
+    Write-Host "Agent skills updated. Staging tracker..."
+    
+    # Stage the hidden state file so it is included in the commit that triggered this hook
+    git add $activeSkillsPath
+}
+
+exit 0
