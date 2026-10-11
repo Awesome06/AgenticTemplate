@@ -1,8 +1,7 @@
 #!/usr/bin/env pwsh
 # .agent/hooks/pre-commit.ps1
-# Analyzes the repo for new language signatures and syncs agent skills before committing.
+# Analyzes the repository for language/stack signatures and dynamically synchronizes agent skills.
 
-# Ensure we are operating from the repository root
 $repoRoot = git rev-parse --show-toplevel
 if ($LASTEXITCODE -ne 0) { exit 0 }
 Set-Location -Path $repoRoot
@@ -12,53 +11,73 @@ $activeSkillsPath = ".agent\.active-skills.json"
 $skillsDir = ".agent\skills"
 
 # Exit silently if the vault isn't vendored yet
-if (-Not (Test-Path $registryMapPath)) { exit 0 }
+if (-not (Test-Path $registryMapPath)) { exit 0 }
 
-$map = Get-Content $registryMapPath | ConvertFrom-Json
-$currentSkills = @()
+$map = Get-Content $registryMapPath -Raw | ConvertFrom-Json
+
+# Initialize or load state matching the workspace-initializer metadata schema
+$state = [ordered]@{
+    version        = "1.0.0"
+    initialized_at = (Get-Date -Format "yyyy-MM-ddTHH:mm:ssZ")
+    stack          = "auto"
+    active_skills  = @()
+}
+
 if (Test-Path $activeSkillsPath) {
-    $currentSkills = Get-Content $activeSkillsPath | ConvertFrom-Json
+    try {
+        $loadedState = Get-Content $activeSkillsPath -Raw | ConvertFrom-Json
+        if ($loadedState.active_skills) {
+            $state.active_skills = @($loadedState.active_skills)
+            if ($loadedState.stack) { $state.stack = $loadedState.stack }
+            if ($loadedState.initialized_at) { $state.initialized_at = $loadedState.initialized_at }
+            if ($loadedState.version) { $state.version = $loadedState.version }
+        }
+    } catch {}
 }
 
 $requiredSkills = @()
 
-# Scan repo for trigger files (e.g., go.mod, package.json)
-foreach ($signature in $map.signatures.psobject.properties) {
-    if (Test-Path $signature.Name) {
-        $requiredSkills += $signature.Value
+# Scan root signatures directly from map properties
+foreach ($prop in $map.psobject.properties) {
+    if (Test-Path $prop.Name) {
+        $requiredSkills += $prop.Value
     }
 }
 $requiredSkills = $requiredSkills | Select-Object -Unique
 
 $driftDetected = $false
 
-# Identify missing skills and create symlinks
+if (-not (Test-Path $skillsDir)) {
+    New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null
+}
+
 foreach ($req in $requiredSkills) {
-    if ($req -notin $currentSkills) {
-        Write-Host "Antigravity Sync: Linking new skill -> $req"
-        
+    if ($req -notin $state.active_skills) {
         $folderName = Split-Path $req -Leaf
-        $targetPath = "..\.registry\$req"
-        $linkPath = "$skillsDir\$folderName"
+        $linkPath = Join-Path $skillsDir $folderName
+        $targetPath = Join-Path $repoRoot ".agent\.registry\$req"
+
+        if (-not (Test-Path $targetPath)) { continue }
+
+        Write-Host "Antigravity Sync: Linking skill -> $folderName ($req)" -ForegroundColor Cyan
         
-        if (-Not (Test-Path $skillsDir)) { 
-            New-Item -ItemType Directory -Path $skillsDir -Force | Out-Null 
+        if (-not (Test-Path $linkPath)) {
+            try {
+                New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetPath -ErrorAction Stop | Out-Null
+            } catch {
+                # Fallback to NTFS junction on Windows if Developer Mode / SeCreateSymbolicLinkPrivilege is absent
+                cmd.exe /c mklink /J "$linkPath" "$targetPath" | Out-Null
+            }
         }
-        
-        # Create Windows symlink (Requires Developer Mode enabled in Windows Settings)
-        New-Item -ItemType SymbolicLink -Path $linkPath -Target $targetPath -Force | Out-Null
-        
-        $currentSkills += $req
+
+        $state.active_skills += $req
         $driftDetected = $true
     }
 }
 
-# Apply and stage updates if drift occurred
 if ($driftDetected) {
-    $currentSkills | ConvertTo-Json | Set-Content $activeSkillsPath
-    Write-Host "Antigravity Sync: Agent skills updated. Staging tracker..."
-    
-    # Stage the hidden state file so it is included in the commit that triggered this hook
+    $state | ConvertTo-Json -Depth 4 | Set-Content -Path $activeSkillsPath -Encoding utf8
+    Write-Host "Antigravity Sync: Active skills updated. Staging tracker..." -ForegroundColor Green
     git add $activeSkillsPath
 }
 

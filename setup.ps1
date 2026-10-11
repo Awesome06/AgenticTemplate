@@ -1,25 +1,37 @@
-# setup.ps1 - Hardened Git Hook Installer for Antigravity
+# setup.ps1 - Antigravity Agent & Git Hook Setup
 [CmdletBinding()]
 param()
 
 $ErrorActionPreference = "Stop"
-Write-Host "Configuring Git hooks for Antigravity Agent..." -ForegroundColor Cyan
+Write-Host "Configuring Antigravity Workspace..." -ForegroundColor Cyan
 
-$hooksDir = ".git/hooks"
-$gitHookPath = "$hooksDir/pre-commit"
-
-# Ensure .git exists
+# 1. Verify Git availability and repository state
 if (-not (Test-Path ".git")) {
-    Write-Error "Not a git repository. Run 'git init' before configuring hooks."
+    Write-Error "Not a git repository. Run 'git init' before setup."
     exit 1
 }
 
-# Ensure .git/hooks directory exists
+# 2. Initialize or vendor .agent/.registry submodule
+if (-not (Test-Path ".agent/.registry/skill-map.json")) {
+    Write-Host "Initializing .agent/.registry submodule from vault..." -ForegroundColor Yellow
+    git submodule update --init --recursive
+    if (-not (Test-Path ".agent/.registry/skill-map.json")) {
+        try {
+            git submodule add https://github.com/Awesome06/agent-skills-vault.git .agent/.registry
+        } catch {
+            Write-Warning "Could not automatically add submodule. If offline or uncommitted, run 'git submodule update --init' later."
+        }
+    }
+}
+
+# 3. Configure Git pre-commit hook
+$hooksDir = ".git/hooks"
+$gitHookPath = "$hooksDir/pre-commit"
+
 if (-not (Test-Path $hooksDir)) {
     New-Item -ItemType Directory -Path $hooksDir -Force | Out-Null
 }
 
-# POSIX-compliant trigger block with LF endings, -NoProfile, and exit code propagation
 $agentTrigger = @"
 # --- Antigravity Agent Hook Start ---
 if command -v powershell.exe >/dev/null 2>&1; then
@@ -33,7 +45,6 @@ fi
 "@ -replace "`r`n", "`n"
 
 if (Test-Path $gitHookPath) {
-    # Read existing content using LF normalization
     $existing = (Get-Content $gitHookPath -Raw) -replace "`r`n", "`n"
     if ($existing -notmatch "Antigravity Agent Hook") {
         $updated = "$existing`n$agentTrigger`n"
@@ -43,10 +54,15 @@ if (Test-Path $gitHookPath) {
         Write-Host "Antigravity sync is already configured in the pre-commit hook." -ForegroundColor Yellow
     }
 } else {
-    # Create new file starting with standard POSIX shebang and pure LF endings
     $newHook = "#!/bin/sh`n$agentTrigger`n"
     [System.IO.File]::WriteAllText((Join-Path (Get-Location) $gitHookPath), $newHook, (New-Object System.Text.UTF8Encoding($false)))
-    Write-Host "Created new pre-commit hook with Antigravity sync (LF encoded)." -ForegroundColor Green
+    Write-Host "Created pre-commit hook with Antigravity sync (LF encoded)." -ForegroundColor Green
 }
 
-Write-Host "Workspace ready. Skills will validate with sub-second execution on every commit." -ForegroundColor Cyan
+# 4. Run initial skill discovery immediately
+if (Test-Path ".agent/hooks/pre-commit.ps1") {
+    Write-Host "Running initial skill synchronization..." -ForegroundColor Cyan
+    & ".agent/hooks/pre-commit.ps1"
+}
+
+Write-Host "Workspace ready. Agent skills will validate and sync on every commit." -ForegroundColor Cyan

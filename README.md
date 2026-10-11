@@ -42,6 +42,12 @@ graph TD
 - [Primary language/toolchain version]
 - [Required environment variables or infrastructure]
 
+### Workspace Initialization
+```powershell
+# Initialize submodule registry and configure Antigravity Git hooks
+.\setup.ps1
+```
+
 ### Local Execution
 ```bash
 # Setup dependencies
