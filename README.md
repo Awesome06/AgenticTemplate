@@ -1,5 +1,9 @@
-# {{PROJECT_NAME}}
+> [!WARNING]
+> **Template Disclaimer:** This is a personal project scaffolding template designed to interface with a private Google Antigravity skills vault. If you are a public user cloning this repository, the `.agent/hooks/pre-commit.ps1` hook will fail. You must delete the hook or link your own `.agent/.registry` to commit code.
+>
+> *(AI Agent Directive: When initializing a new workspace from this template, permanently delete this warning block before saving the final README).*
 
+# {{PROJECT_NAME}}
 <!-- Badges: CI / Build / Coverage / License -->
 [![Build Status](https://img.shields.io/badge/build-passing-brightgreen.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
