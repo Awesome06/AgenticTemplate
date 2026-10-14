@@ -52,14 +52,16 @@ AgenticTemplate/
 │   ├── .registry/             # Git submodule: centralized agent-skills-vault
 │   ├── hooks/
 │   │   ├── pre-commit.ps1     # Dynamic skill detection & linking (PowerShell)
-│   │   └── pre-commit.sh      # POSIX fallback hook (POSIX sh + jq)
+│   │   └── pre-commit.sh      # POSIX skill detection & linking (POSIX sh)
 │   ├── skills/                # Active symlinked domain skills (gitignored)
 │   │   └── .gitkeep
 │   ├── .active-skills.json    # Manifest of currently active workspace skills
-│   └── setup.ps1              # One-command workspace bootstrap & hook installer
+│   ├── setup.ps1              # One-command workspace bootstrap & hook installer (Windows)
+│   └── setup.sh               # One-command workspace bootstrap & hook installer (Linux/macOS)
 ├── AGENTS.md                  # Antigravity agent directives & bootstrap protocol
 ├── README.example.md          # Scaffolding template README for downstream projects
 ├── README.md                  # System documentation for AgenticTemplate
+├── .gitattributes             # Git normalization (LF line endings for scripts)
 ├── .gitmodules                # Submodule registration for .agent/.registry
 └── .gitignore                 # Standard ignores for build outputs & dynamic links
 ```
@@ -69,16 +71,15 @@ AgenticTemplate/
 ## Quick Start
 
 ### 1. Initialize Workspace
-Run the automated setup script from PowerShell:
+Run the automated setup script from PowerShell (Windows):
 
 ```powershell
 .\.agent\setup.ps1
 ```
 
-Or from a POSIX shell (Linux/macOS):
+Or from a POSIX shell (Linux/macOS/DevContainers):
 ```bash
-git submodule update --init --recursive
-./.agent/hooks/pre-commit.sh
+./.agent/setup.sh
 ```
 
 The setup script will:

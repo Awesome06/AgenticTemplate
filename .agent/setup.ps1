@@ -96,6 +96,10 @@ if (Test-Path $gitHookPath) {
     Write-Host "Created pre-commit hook with Antigravity sync (LF encoded)." -ForegroundColor Green
 }
 
+# Ensure shell scripts have executable bits registered in git
+git update-index --chmod=+x .agent/hooks/pre-commit.sh 2>$null
+git update-index --chmod=+x .agent/setup.sh 2>$null
+
 # 5. Run initial skill discovery immediately
 if (Test-Path ".agent/hooks/pre-commit.ps1") {
     Write-Host "Running initial skill synchronization..." -ForegroundColor Cyan

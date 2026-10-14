@@ -37,12 +37,21 @@ if (Test-Path $activeSkillsPath) {
 
 $requiredSkills = @()
 
-# Scan repository signatures directly from map properties (root and subdirectories)
+# Scan repository signatures directly from map properties (excluding agent customization/registry roots)
 foreach ($prop in $map.psobject.properties) {
+    if ($prop.Name -match '^\.?agents?(/|$)' -or $prop.Name -match '^\.?registry(/|$)') {
+        continue
+    }
+
     if (Test-Path $prop.Name) {
         $requiredSkills += $prop.Value
-    } elseif (-not $prop.Name.EndsWith("/") -and (Get-ChildItem -Path "." -Filter $prop.Name -Recurse -File -Depth 4 -ErrorAction SilentlyContinue | Select-Object -First 1)) {
-        $requiredSkills += $prop.Value
+    } elseif (-not $prop.Name.EndsWith("/")) {
+        $matchedFile = Get-ChildItem -Path "." -Filter $prop.Name -Recurse -File -Depth 4 -ErrorAction SilentlyContinue |
+            Where-Object { $_.FullName -notmatch '[\\/](\.agents?|\.git|node_modules|vendor|\.venv)[\\/]' } |
+            Select-Object -First 1
+        if ($matchedFile) {
+            $requiredSkills += $prop.Value
+        }
     }
 }
 $requiredSkills = $requiredSkills | Select-Object -Unique
@@ -76,6 +85,19 @@ foreach ($req in $requiredSkills) {
         }
 
         $state.active_skills += $req
+        $driftDetected = $true
+    }
+}
+
+# Prune stale domain skills in .agent\skills that are no longer required
+$currentSkills = Get-ChildItem -Path $skillsDir -Directory -ErrorAction SilentlyContinue
+$reqFolderNames = @($requiredSkills | ForEach-Object { Split-Path $_ -Leaf })
+
+foreach ($dir in $currentSkills) {
+    if ($dir.Name -notin $reqFolderNames) {
+        Write-Host "Antigravity Sync: Pruning stale skill link -> $($dir.Name)" -ForegroundColor Yellow
+        Remove-Item -Path $dir.FullName -Recurse -Force -ErrorAction SilentlyContinue
+        $state.active_skills = @($state.active_skills | Where-Object { (Split-Path $_ -Leaf) -ne $dir.Name })
         $driftDetected = $true
     }
 }
