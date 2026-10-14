@@ -172,4 +172,14 @@ if [ $DRIFT_DETECTED -eq 1 ]; then
     git add "$ACTIVE_SKILLS"
 fi
 
+# 3. Validate repository wiki knowledge graph if present
+WIKI_ENGINE=".agent/.registry/scripts/wiki-engine.py"
+if [ -d "wiki" ] && [ -f "$WIKI_ENGINE" ]; then
+    if command -v python3 >/dev/null 2>&1; then
+        python3 "$WIKI_ENGINE" --root wiki lint || exit 1
+    elif command -v python >/dev/null 2>&1; then
+        python "$WIKI_ENGINE" --root wiki lint || exit 1
+    fi
+fi
+
 exit 0

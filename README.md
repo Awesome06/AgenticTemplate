@@ -41,6 +41,8 @@ graph TD
   [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md) defines explicit protocol steps for AI coding agents on initialization: verifying Git hooks, running initial skill discovery, keeping context windows lean, and requiring testing/linting before staging code changes.
 - **Clean Root Architecture**:
   All agent orchestration scripts, submodules, hook triggers, and link targets live encapsulated under the [`.agent/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agent) directory.
+- **In-House Repository Knowledge Graph**:
+  Built-in support for atomic documentation, architecture decision records (ADRs), and bidirectional wikilinks in `wiki/`. Verified via pre-commit linting to ensure zero dead links. Subgraph queries and interactive HTML graph visualization powered by the zero-dependency `.agent/wiki.ps1` (or `wiki.sh`) tool.
 
 ---
 
@@ -51,13 +53,20 @@ AgenticTemplate/
 ├── .agent/
 │   ├── .registry/             # Git submodule: centralized agent-skills-vault
 │   ├── hooks/
-│   │   ├── pre-commit.ps1     # Dynamic skill detection & linking (PowerShell)
-│   │   └── pre-commit.sh      # POSIX skill detection & linking (POSIX sh)
+│   │   ├── pre-commit.ps1     # Dynamic skill detection & wiki linting (PowerShell)
+│   │   └── pre-commit.sh      # POSIX skill detection & wiki linting (POSIX sh)
 │   ├── skills/                # Active symlinked domain skills (gitignored)
 │   │   └── .gitkeep
+│   ├── wiki.ps1               # Quick CLI launcher for wiki-engine (Windows)
+│   ├── wiki.sh                # Quick CLI launcher for wiki-engine (Linux/macOS)
 │   ├── .active-skills.json    # Manifest of currently active workspace skills
 │   ├── setup.ps1              # One-command workspace bootstrap & hook installer (Windows)
 │   └── setup.sh               # One-command workspace bootstrap & hook installer (Linux/macOS)
+├── wiki/                      # Repository Knowledge Graph & ADRs (Markdown)
+│   ├── index.md               # Root knowledge graph entrypoint
+│   ├── architecture.md        # High-level architecture specification
+│   └── adr/                   # Architecture Decision Records
+│       └── 001-initial-architecture.md
 ├── AGENTS.md                  # Antigravity agent directives & bootstrap protocol
 ├── README.example.md          # Scaffolding template README for downstream projects
 ├── README.md                  # System documentation for AgenticTemplate
@@ -106,6 +115,6 @@ When scaffolding a new application from this template into a fresh repository:
 Antigravity operates with a two-tier skill model:
 
 1. **Global Skills** (`~/.gemini/config/skills/`):
-   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`). These are never linked into `.agent/skills/`.
+   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`, `repo-wiki`). These are never linked into `.agent/skills/`.
 2. **Workspace Domain Skills** (`.agent/skills/`):
    Language-, framework-, and stack-specific skills (e.g., `go`, `react`, `rust`, `python`) dynamically linked from the vendored `.agent/.registry` based on active repository files.
