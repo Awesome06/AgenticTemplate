@@ -48,6 +48,18 @@ graph TD
 .\.agent\setup.ps1
 ```
 
+### Repository Knowledge Graph (Wiki)
+```powershell
+# Query architecture decisions and specifications
+.\.agent\wiki.ps1 query "architecture"
+
+# Validate all [[wikilinks]] before committing
+.\.agent\wiki.ps1 lint
+
+# Render interactive HTML graph visualization
+.\.agent\wiki.ps1 render
+```
+
 ### Local Execution
 ```bash
 # Setup dependencies

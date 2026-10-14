@@ -110,6 +110,9 @@ if ($driftDetected) {
 
 # 3. Validate repository wiki knowledge graph if present
 $wikiEnginePath = ".agent\.registry\scripts\wiki-engine.py"
+if (-not (Test-Path $wikiEnginePath) -and (Test-Path "..\agent-skills-vault\scripts\wiki-engine.py")) {
+    $wikiEnginePath = "..\agent-skills-vault\scripts\wiki-engine.py"
+}
 if ((Test-Path "wiki") -and (Test-Path $wikiEnginePath)) {
     if (Get-Command python -ErrorAction SilentlyContinue) {
         python $wikiEnginePath --root wiki lint
