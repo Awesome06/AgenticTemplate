@@ -1,8 +1,10 @@
 ---
 title: Initial Architectural Baseline
+summary: Foundational decision establishing modular boundaries, agent skills integration, and repository wiki memory.
 type: adr
 status: active
 tags: [adr, baseline, setup]
+aliases: [adr-001, baseline-architecture]
 ---
 
 # ADR 001: Initial Architectural Baseline
@@ -17,8 +19,8 @@ Establishes the foundational project layout, agentic skill integration, and repo
 
 ## Consequences
 - Every new architectural pivot MUST be captured in a sequential ADR in `wiki/adr/`.
-- Cross-references use bidirectional `[[target-note]]` wikilink syntax.
+- Cross-references use bidirectional `[[target-note]]` wikilink syntax with optional edge typing.
 
 ## References
-- Root Knowledge Graph: [[wiki/index]]
-- System Architecture: [[wiki/architecture]]
+- Root Knowledge Graph: [[wiki/index]] (relates_to)
+- System Architecture: [[wiki/architecture]] (relates_to)
