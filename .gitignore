@@ -26,3 +26,16 @@ target/
 .wiki-cache.json
 wiki-graph.json
 wiki-graph.html
+
+# Local secrets & credentials
+secrets/
+*.json.key
+*.pem
+
+# Local state database & cache
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+data/
