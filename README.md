@@ -23,9 +23,9 @@ graph TD
     B --> D[Install Git pre-commit hook]
     D --> E[Developer / Agent commits files]
     E --> F[Hook Scans Signatures in .agent/.registry/skill-map.json]
-    F --> G[Symlink / Junction Domain Skills into .agent/skills/]
+    F --> G[Symlink / Junction Domain Skills into .agents/skills/]
     G --> H[Update .agent/.active-skills.json]
-    H --> I[Antigravity Agent Reads Active Domain Skills]
+    H --> I[Antigravity Agent Discovers Active Domain Skills]
     I --> J[Enforce Directives in AGENTS.md]
 ```
 
@@ -34,13 +34,13 @@ graph TD
 ## Core Capabilities
 
 - **Automated Stack & Skill Discovery**:
-  When files are committed, `.agent/hooks/pre-commit.ps1` (or POSIX `.agent/hooks/pre-commit.sh`) scans the repository for language and framework markers (e.g., `go.mod`, `package.json`, `Cargo.toml`, `requirements.txt`). It automatically symlinks matching domain skills from `.agent/.registry` into `.agent/skills/`.
+  When files are committed, `.agent/hooks/pre-commit.ps1` (or POSIX `.agent/hooks/pre-commit.sh`) scans the repository for language and framework markers (e.g., `go.mod`, `package.json`, `Cargo.toml`, `requirements.txt`). It automatically symlinks matching domain skills from `.agent/.registry` into `.agents/skills/` (Antigravity's native workspace customization root).
 - **Zero-Friction Windows & POSIX Support**:
   Hooks and setup scripts seamlessly handle Windows Developer Mode symlinks with automatic fallback to NTFS directory junctions (`mklink /J`), alongside standard POSIX symlinks (`ln -s`) for Linux, macOS, and DevContainers.
 - **Strict Agent Governance**:
   [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md) defines explicit protocol steps for AI coding agents on initialization: verifying Git hooks, running initial skill discovery, keeping context windows lean, and requiring testing/linting before staging code changes.
 - **Clean Root Architecture**:
-  All agent orchestration scripts, submodules, hook triggers, and link targets live encapsulated under the [`.agent/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agent) directory.
+  Orchestration scripts, submodules, hook triggers, and manifest state live encapsulated under `.agent/`, while IDE customization discovery lives in [`.agents/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agents/skills).
 - **In-House Repository Knowledge Graph**:
   Built-in support for atomic documentation, architecture decision records (ADRs), and bidirectional wikilinks in `wiki/`. Verified via pre-commit linting to ensure zero dead links. Subgraph queries and interactive HTML graph visualization powered by the zero-dependency `.agent/wiki.ps1` (or `wiki.sh`) tool.
 
@@ -53,15 +53,16 @@ AgenticTemplate/
 ├── .agent/
 │   ├── .registry/             # Git submodule: centralized agent-skills-vault
 │   ├── hooks/
-│   │   ├── pre-commit.ps1     # Dynamic skill detection & wiki linting (PowerShell)
-│   │   └── pre-commit.sh      # POSIX skill detection & wiki linting (POSIX sh)
-│   ├── skills/                # Active symlinked domain skills (gitignored)
-│   │   └── .gitkeep
+│   │   ├── pre-commit.ps1     # Submodule auto-sync & skill detection (PowerShell)
+│   │   └── pre-commit.sh      # Submodule auto-sync & skill detection (POSIX sh)
 │   ├── wiki.ps1               # Quick CLI launcher for wiki-engine (Windows)
 │   ├── wiki.sh                # Quick CLI launcher for wiki-engine (Linux/macOS)
 │   ├── .active-skills.json    # Manifest of currently active workspace skills
 │   ├── setup.ps1              # One-command workspace bootstrap & hook installer (Windows)
 │   └── setup.sh               # One-command workspace bootstrap & hook installer (Linux/macOS)
+├── .agents/
+│   └── skills/                # Antigravity customization discovery root (symlinks gitignored)
+│       └── .gitkeep
 ├── wiki/                      # Repository Knowledge Graph & ADRs (Markdown)
 │   ├── index.md               # Root knowledge graph entrypoint
 │   ├── architecture.md        # High-level architecture specification
@@ -95,7 +96,7 @@ The setup script will:
 1. Ensure the workspace is a valid Git repository and set the root directory.
 2. Initialize and pull the `.agent/.registry` submodule from the skills vault.
 3. Configure the Git `.git/hooks/pre-commit` hook to run synchronization on every commit.
-4. Execute an immediate initial synchronization pass.
+4. Execute an immediate initial synchronization pass into `.agents/skills/`.
 
 ### 2. Fresh Repository Setup & Cleanup
 When scaffolding a new application from this template into a fresh repository:
@@ -106,7 +107,7 @@ When scaffolding a new application from this template into a fresh repository:
    - If you do not have access to the private `agent-skills-vault`, either link your own submodule to `.agent/.registry` or remove `.agent/hooks/` and the pre-commit hook triggers.
 3. **Populate Stack & Commit**:
    - Add your application source code and stack manifest files (e.g., `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`).
-   - Commit your changes—the pre-commit hook will automatically detect your project stack and symlink matching domain skills into [`.agent/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agent/skills).
+   - Commit your changes—the pre-commit hook will automatically detect your project stack and symlink matching domain skills into [`.agents/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agents/skills).
 
 ---
 
@@ -115,6 +116,6 @@ When scaffolding a new application from this template into a fresh repository:
 Antigravity operates with a two-tier skill model:
 
 1. **Global Skills** (`~/.gemini/config/skills/`):
-   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`, `repo-wiki`). These are never linked into `.agent/skills/`.
-2. **Workspace Domain Skills** (`.agent/skills/`):
+   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`, `repo-wiki`). These are never linked into `.agents/skills/`.
+2. **Workspace Domain Skills** (`.agents/skills/`):
    Language-, framework-, and stack-specific skills (e.g., `go`, `react`, `rust`, `python`) dynamically linked from the vendored `.agent/.registry` based on active repository files.
