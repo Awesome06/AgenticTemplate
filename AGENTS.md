@@ -15,6 +15,15 @@
 - Do not add or remove third-party dependencies without explicit user confirmation.
 - Keep the context window lean: do not load files into context unless actively modifying them.
 
+## Chat UI Readability & Output Formatting Protocol
+- **Strict Zero-Raw-LaTeX in Chat Streams:** Never stream or output unparsed raw LaTeX math expressions (`$...$`, `$$...$$`, `\beta`, `\to`, `\mathbf{...}`) in conversational chat text. Chat streaming interfaces often fail to parse raw LaTeX blocks, causing visual friction and garbled markdown.
+- **Unicode & Native Markdown Math Substitution:**
+  - **Greek Letters & Mathematical Symbols:** Use standard UTF-8 Unicode characters directly in the chat body (e.g., `β` instead of `\beta`, `→` instead of `\to`, `±` instead of `\pm`, `Δ` instead of `\Delta`, `μ` instead of `\mu`, `σ` instead of `\sigma`, `≈` instead of `\approx`, `≤` / `≥` instead of `\le` / `\ge`).
+  - **Emphasis & Styling:** Use standard Markdown bolding/italics (`**text**`, `*text*`) instead of LaTeX font commands (`\mathbf{...}`, `\mathit{...}`, `\text{...}`).
+  - **Code & Variable Names:** Wrap feature names, variable identifiers, and parameters in inline backticks (e.g., `residence_since`, `existing_credits`).
+- **Scannable Layouts for Numerical & Comparative Data:** Present multi-cohort metrics, coefficient shifts, and comparative findings using structured bullet points or clean Markdown tables rather than dense inline math formulas.
+- **Artifact Isolation for Formal Math/LaTeX:** When formal LaTeX documents or complex multi-line derivations are explicitly requested, confine them strictly to dedicated artifact files (e.g., `.tex` files or structured document artifacts), keeping the conversational stream clean, scannable, and human-friendly.
+
 ## Git Staging & Commit Protocol
 - **Pre-Staging Verification:** Run active linters and tests via `test-discipline` before staging any changes.
 - **Autonomous Staging & Commit Formulation:** Agents are authorized to stage modified files (`git add`) and formulate structured commit messages adhering to Conventional Commits (via `git-release`) with a comprehensive technical description:
