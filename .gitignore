@@ -39,3 +39,7 @@ secrets/
 *.sqlite
 *.sqlite3
 data/
+
+# Local agent rules & maintainer taste
+.agents/rules/
+

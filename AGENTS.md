@@ -15,6 +15,13 @@
 - Do not add or remove third-party dependencies without explicit user confirmation.
 - Keep the context window lean: do not load files into context unless actively modifying them.
 
+## Self-Upgrading Pipeline & Gated Execution
+- When resolving issues, authoring fixes, or proposing pull requests, adhere strictly to the 4-stage pipeline codified in `ops/self-upgrading-pipeline`:
+  1. **Context Bootstrapper:** Verify maintainer taste and conventions (local rules in `.agents/rules/maintainer-taste.md` or global cache `~/.gemini/config/repo-tastes/`).
+  2. **Red-Test Reproducer Gate:** Modifying implementation logic before authoring and executing an isolated failing reproduction test (`TestIssueXXXXX`) is STRICTLY FORBIDDEN.
+  3. **Adversarial Pre-Flight Filter:** Audit diffs for zero formatting noise ($\le 5\%$ pure whitespace churn), ensure concurrency sanitizers (`-race`) pass, and eliminate extraneous debug statements.
+  4. **Recursive Distiller:** Capture trajectory deltas and record generalizable architectural invariants.
+
 ## Chat UI Readability & Output Formatting Protocol
 - **Strict Zero-Raw-LaTeX in Chat Streams:** Never stream or output unparsed raw LaTeX math expressions (`$...$`, `$$...$$`, `\beta`, `\to`, `\mathbf{...}`) in conversational chat text. Chat streaming interfaces often fail to parse raw LaTeX blocks, causing visual friction and garbled markdown.
 - **Unicode & Native Markdown Math Substitution:**
