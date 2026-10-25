@@ -19,7 +19,7 @@ Establishes the foundational project layout, agentic skill integration, and repo
 
 ## Consequences
 - Every new architectural pivot MUST be captured in a sequential ADR in `wiki/adr/`.
-- Cross-references use bidirectional `[[target-note]]` wikilink syntax with optional edge typing.
+- Cross-references use bidirectional wikilink syntax (e.g. [[wiki/architecture]]) with optional edge typing.
 
 ## References
 - Root Knowledge Graph: [[wiki/index]] (relates_to)
