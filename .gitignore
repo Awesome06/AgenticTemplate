@@ -24,8 +24,21 @@ target/
 
 # Local Wiki Knowledge Graph cache & artifacts
 .wiki-cache.json
+**/.wiki-cache.json
+wiki/.wiki-cache.json
 wiki-graph.json
 wiki-graph.html
+wiki-graph.dot
+wiki-graph.mermaid
+
+# Antigravity dynamic cluster leases & runtime state
+.agents/.skill-leases.json
+*.active-skills.json.bak
+
+# Competition video & agent scratch artifacts
+DEMO_VIDEO_SCRIPT.md
+demo-recording/
+scratch/
 
 # Local secrets & credentials
 secrets/
@@ -42,4 +55,5 @@ data/
 
 # Local agent rules & maintainer taste
 .agents/rules/
+
 

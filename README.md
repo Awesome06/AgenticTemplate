@@ -1,5 +1,5 @@
 > [!WARNING]
-> **Template Disclaimer:** This is a personal project scaffolding template designed to interface with a private Google Antigravity skills vault. If you are a public user cloning this repository, the `.agent/hooks/pre-commit.ps1` hook will fail. You must delete the hook or link your own `.agent/.registry` to commit code.
+> **Template Disclaimer:** This is a personal project scaffolding template designed to interface with a private Google Antigravity skills vault. If you are a public user cloning this repository, the `.agent/hooks/pre-commit.ps1` and `.agent/hooks/pre-commit.sh` hooks will fail. You must delete the hooks or link your own `.agent/.registry` to commit code.
 >
 > *(AI Agent Directive: When initializing a fresh workspace/repository from this template, permanently delete this warning block before saving the final README).*
 
@@ -18,7 +18,7 @@ An opinionated, agent-first repository scaffolding template for **Google Antigra
 
 ```mermaid
 graph TD
-    A[New Project from Template] --> B[Run .agent/setup.ps1]
+    A[New Project from Template] --> B[Run .agent/setup.ps1 or setup.sh]
     B --> C[Init .agent/.registry Submodule]
     B --> D[Install Git pre-commit hook]
     D --> E[Developer / Agent commits files]

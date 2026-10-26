@@ -224,7 +224,7 @@ if (-not (Test-Path $agentsSkillsDir)) {
     New-Item -ItemType Directory -Path $agentsSkillsDir -Force | Out-Null
 }
 
-$globalSkills = @('code-review', 'doc-sync', 'error-discipline', 'git-release', 'incident-triaging', 'security-auditor', 'test-discipline', 'workspace-initializer', 'repo-wiki')
+$globalSkills = @('code-review', 'doc-sync', 'error-discipline', 'git-release', 'incident-triaging', 'intent-discipline', 'repo-wiki', 'script-optimization', 'security-auditor', 'strategic-reconnaissance', 'test-discipline', 'workspace-initializer')
 $protectedSkills = @('design-orchestrator', 'hackathon-evaluation-governance')
 
 function Link-SkillDirectory([string]$linkTarget, [string]$destinationDir, [string]$skillFolder) {
