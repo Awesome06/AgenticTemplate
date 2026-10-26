@@ -6,8 +6,8 @@
   2. Check if the local `.agents/skills/` directory contains active domain skills.
   3. Automatically detect the application stack from repository manifest files (`pyproject.toml`, `package.json`, `go.mod`, etc.) and synchronize skills silently without pausing to ask the user for confirmation to analyze.
   4. Once skills are linked, strictly enforce their constraints during all subsequent code generation and review tasks.
-  5. Note: Global skills (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`, `repo-wiki`) are pre-loaded at the machine level (`~/.gemini/config/skills/`). Do not attempt to symlink them into `.agents/skills/`.
-  6. Repository Knowledge Graph: Check for `wiki/`. When architectural decisions, design contracts, or runbooks change, maintain atomic records using the `repo-wiki` protocol (`[[wikilinks]]`, YAML frontmatter). Use `.agent/wiki.ps1 query <topic>` (or `.agent/wiki.sh`) to slice context on demand without bloating the prompt window.
+  5. Note: Global skills (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `intent-discipline`, `repo-wiki`, `script-optimization`, `security-auditor`, `strategic-reconnaissance`, `test-discipline`, `workspace-initializer`) are pre-loaded at the machine level (`~/.gemini/config/skills/`). Do not attempt to symlink them into `.agents/skills/`.
+   6. Repository Knowledge Graph: Check for `wiki/`. When architectural decisions, design contracts, or runbooks change, maintain atomic records using the `repo-wiki` protocol (`[[wikilinks]]`, YAML frontmatter). Use `.agent/wiki.ps1 query <topic>` (or `.agent/wiki.sh`) to slice context on demand without bloating the prompt window.
 
 ## General Constraints
 - The `.agent/` and `.agents/` directories (including `.agent/.registry`) are internal registry, hook, and customization storage. NEVER treat them as application source code, and NEVER allow internal registry files to trigger skills.
@@ -29,21 +29,32 @@
 - **CI Reality & Execution Parity Transparency:** Authoring tests for runtimes or subsystems that compile locally but are omitted from active continuous integration workflows (`.github/workflows/*.yml`) is STRICTLY FORBIDDEN. Agents must verify CI workflow commands before writing tests; unexecuted tests in CI are dead weight that rot silently.
 - **One Canonical Home Per Claim & Docstring Mirror Testing:** Technical claims live in exactly one location: callable contracts in docstrings, shared semantics in type docs, and architectural trade-offs in narrative guides. Any executable docstring example marked with skip directives (`# doctest: +SKIP`) MUST have a companion live mirror test preventing doc code rot.
 - **Enumerate the Family Before Modifying Invariant:** Before extending, modifying, or creating an interface method, trait implementation, FFI capsule getter, or dunder protocol (`__datafusion_*__`, `arrow::compute::*`, `logstorage.*`), agents MUST run a mandatory pre-flight grep enumerating all existing sibling implementations in that family. Modifying one member of a protocol family without verifying signature parity and behavioral harmony across the entire family is STRICTLY FORBIDDEN.
+- **Closed PR Non-Reopening Invariant (`mode == "oss"`):** In external open-source repositories, reopening a closed pull request (`gh pr reopen`) is STRICTLY FORBIDDEN. If a PR has been closed (by maintainers, automation bots, or author action), agents MUST NOT unilaterally reopen it or propose reopening it. Maintainer closures signify architectural disagreement, stale design, or maintainer fatigue; reopening forces unwanted notifications and antagonizes maintainers. If the contribution is still viable, contributors MUST either seek maintainer alignment on the linked tracking issue first or submit a fresh, cleanly rebased PR from a new branch with all maintainer feedback resolved. In personal repositories (`mode == "personal"`), reopening PRs is fully permitted.
 
-## Chat UI Readability & Output Formatting Protocol
-- **Strict Zero-Raw-LaTeX in Chat Streams:** Never stream or output unparsed raw LaTeX math expressions (`$...$`, `$$...$$`, `\beta`, `\to`, `\mathbf{...}`) in conversational chat text. Chat streaming interfaces often fail to parse raw LaTeX blocks, causing visual friction and garbled markdown.
-- **Unicode & Native Markdown Math Substitution:**
-  - **Greek Letters & Mathematical Symbols:** Use standard UTF-8 Unicode characters directly in the chat body (e.g., `β` instead of `\beta`, `→` instead of `\to`, `±` instead of `\pm`, `Δ` instead of `\Delta`, `μ` instead of `\mu`, `σ` instead of `\sigma`, `≈` instead of `\approx`, `≤` / `≥` instead of `\le` / `\ge`).
-  - **Emphasis & Styling:** Use standard Markdown bolding/italics (`**text**`, `*text*`) instead of LaTeX font commands (`\mathbf{...}`, `\mathit{...}`, `\text{...}`).
-  - **Code & Variable Names:** Wrap feature names, variable identifiers, and parameters in inline backticks (e.g., `residence_since`, `existing_credits`).
-- **Scannable Layouts for Numerical & Comparative Data:** Present multi-cohort metrics, coefficient shifts, and comparative findings using structured bullet points or clean Markdown tables rather than dense inline math formulas.
-- **Artifact Isolation for Formal Math/LaTeX:** When formal LaTeX documents or complex multi-line derivations are explicitly requested, confine them strictly to dedicated artifact files (e.g., `.tex` files or structured document artifacts), keeping the conversational stream clean, scannable, and human-friendly.
+---
 
-## Git Staging & Commit Protocol
-- **Pre-Staging Verification:** Run active linters and tests via `test-discipline` before staging any changes.
-- **Autonomous Staging & Commit Formulation:** Agents are authorized to stage modified files (`git add`) and formulate structured commit messages adhering to Conventional Commits (via `git-release`) with a comprehensive technical description:
-  - Header: `<type>(<scope>): <subject>` (maximum 72 characters, imperative mood, lowercase, no trailing period).
-  - Multi-line body: Explicit motivation/intent, bulleted key changes, and verification evidence.
+## Chat Output Readability & Anti-LaTeX Invariant
+
+- **Zero-Tolerance for Broken Math Delimiters:** In conversational chat turns and assistant messages, agents MUST prioritize immediate visual clarity and plain-text markdown formatting. The Chat UI renders standard GitHub-Flavored Markdown (GFM) WITHOUT a KaTeX/MathJax engine. Unescaped LaTeX causes broken formatting, raw dollar signs, and syntax noise.
+- **Rule A (Zero Dollar Delimiters):** NEVER wrap equations, numbers, units, or variables in single (`$...$`) or double (`$$...$$`) dollar signs. Dollar signs are ONLY allowed in code blocks for shell variables (e.g. `echo $PATH`), shell prompts (`$ command`), or monetary values (`$50`).
+- **Rule B (Zero LaTeX Math Commands):** NEVER use LaTeX math macros in chat responses. Always use ASCII / Unicode equivalents (`*` or `x` instead of `\times`, `/` instead of `\div`, `µs` instead of `\mu s`, `O(N)` instead of `\mathcal{O}(N)`, `<=`, `>=`, `!=` instead of `\le`, `\ge`, `\neq`, `A / B` instead of `\frac{A}{B}`, `<->` instead of `\leftrightarrow`).
+- **Scope Boundaries:** Formal LaTeX syntax (`$...$`, `$$...$$`, `\begin{equation}`) is STRICTLY RESERVED for `.ipynb` notebook cells, `.tex` documents, and PDF generation templates. Outside of those specific file types, ALL outputs MUST be 100% clean plain-text/Unicode GFM.
+- **Pre-Emission Mental Scan Gate:** Before outputting ANY response, the agent MUST run a mandatory verification check:
+  - *"Does this response contain any `$` enclosing math or variables?"* -> Strip immediately.
+  - *"Does this response contain `\times`, `\div`, `\text{`, `\mu`, or `\mathcal`?"* -> Replace with `*`, `/`, plain text, `µs`, or `O(...)`.
+
+---
+
+## Git Staging & Commit Review Protocol
+
+- **Pre-Staging Verification Gate:** Run active linters and tests via `test-discipline` before staging any changes.
+- **Autonomous Staging & Commit Formulation:** Agents are authorized to stage modified files (`git add`) and craft structured commit messages adhering strictly to the `globals/git-release` Conventional Commits standard:
+  - **Header:** `<type>(<scope>): <subject>` (maximum 72 characters, imperative mood, lowercase, no trailing period).
+  - **Multi-Line Body:** Comprehensive technical description detailing:
+    - **Motivation & Intent:** Why the modification or skill addition was made.
+    - **Key Changes:** Bullet points identifying exact files, components, or invariants modified.
+    - **Verification Evidence:** Proof of local test runs (e.g., `tests passed`).
+- **Documentation & Directive Lockstep Gate (`AGENTS.md` <-> `README.md`):** Before staging any change, agents MUST verify that any modification altering directory layouts, tools, scripts, or operational workflows is reflected consistently in both `README.md` and `AGENTS.md`. Committing changes where `README.md` and `AGENTS.md` describe divergent instructions is STRICTLY FORBIDDEN.
 - **Review Gate (Not Committed Until Review):** Commits MUST NOT be executed autonomously. Always leave changes staged and present the drafted commit message and diff summary to the user for review. Execute `git commit` ONLY after explicit user review and approval.
 - **Strict Zero-Unprompted-Push Guardrail:** NEVER run `git push` without explicit user instruction.
 

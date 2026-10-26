@@ -116,6 +116,6 @@ When scaffolding a new application from this template into a fresh repository:
 Antigravity operates with a two-tier skill model:
 
 1. **Global Skills** (`~/.gemini/config/skills/`):
-   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `security-auditor`, `test-discipline`, `workspace-initializer`, `repo-wiki`). These are never linked into `.agents/skills/`.
+   Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `intent-discipline`, `repo-wiki`, `script-optimization`, `security-auditor`, `strategic-reconnaissance`, `test-discipline`, `workspace-initializer`). These are never linked into `.agents/skills/`.
 2. **Workspace Domain Skills** (`.agents/skills/`):
    Language-, framework-, and stack-specific skills (e.g., `go`, `react`, `rust`, `python`) dynamically linked from the vendored `.agent/.registry` based on active repository files.
