@@ -1,6 +1,9 @@
 # setup.ps1 - Antigravity Agent & Git Hook Setup
 [CmdletBinding()]
-param()
+param(
+    [ValidateSet("personal", "author-oss")]
+    [string]$Preset = "personal"
+)
 
 $ErrorActionPreference = "Stop"
 Write-Host "Configuring Antigravity Workspace..." -ForegroundColor Cyan
@@ -106,4 +109,17 @@ if (Test-Path ".agent/hooks/pre-commit.ps1") {
     & ".agent/hooks/pre-commit.ps1"
 }
 
-Write-Host "Workspace ready. Agent skills will validate and sync on every commit." -ForegroundColor Cyan
+# 6. Apply Preset Scaffolding (if author-oss)
+if ($Preset -eq "author-oss") {
+    Write-Host "Applying Author-Maintained Open-Source Scaffolding Preset..." -ForegroundColor Yellow
+    $scaffoldScript = ".agent/.registry/scripts/scaffold-oss.py"
+    if (Test-Path $scaffoldScript) {
+        python $scaffoldScript --workspace .
+    } elseif (Test-Path ".agent/scaffold.py") {
+        python .agent/scaffold.py --preset author-oss
+    } else {
+        Write-Warning "Scaffolding script not found. Please ensure .agent/.registry is initialized."
+    }
+}
+
+Write-Host "Workspace ready ($Preset mode). Agent skills will validate and sync on every commit." -ForegroundColor Cyan

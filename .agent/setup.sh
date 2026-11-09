@@ -2,7 +2,9 @@
 # .agent/setup.sh - Antigravity Agent & Git Hook Setup for POSIX (Linux, macOS, DevContainers)
 set -e
 
-echo "\033[0;36mConfiguring Antigravity Workspace (POSIX)...\033[0m"
+PRESET="${1:-personal}"
+
+echo "\033[0;36mConfiguring Antigravity Workspace (POSIX, preset: $PRESET)...\033[0m"
 
 # 1. Verify Git availability and repository state
 REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || {
@@ -83,4 +85,14 @@ if [ -f ".agent/hooks/pre-commit.sh" ]; then
     sh ".agent/hooks/pre-commit.sh"
 fi
 
-echo "\033[0;36mWorkspace ready. Agent skills will validate and sync on every commit.\033[0m"
+# 6. Apply Preset Scaffolding (if author-oss)
+if [ "$PRESET" = "author-oss" ]; then
+    echo "\033[0;33mApplying Author-Maintained Open-Source Scaffolding Preset...\033[0m"
+    if [ -f ".agent/.registry/scripts/scaffold-oss.py" ]; then
+        python3 .agent/.registry/scripts/scaffold-oss.py --workspace .
+    elif [ -f ".agent/scaffold.py" ]; then
+        python3 .agent/scaffold.py --preset author-oss
+    fi
+fi
+
+echo "\033[0;36mWorkspace ready ($PRESET mode). Agent skills will validate and sync on every commit.\033[0m"

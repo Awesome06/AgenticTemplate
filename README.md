@@ -109,6 +109,22 @@ When scaffolding a new application from this template into a fresh repository:
    - Add your application source code and stack manifest files (e.g., `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`).
    - Commit your changes—the pre-commit hook will automatically detect your project stack and symlink matching domain skills into [`.agents/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agents/skills).
 
+### 3. Workspace Archetype Presets (Personal vs. Author-Maintained Open-Source)
+AgenticTemplate supports both private personal development and public author-maintained open-source releases on `main`:
+- **Personal Default (`mode: personal`):** Standard setup for private applications, experiments, and rapid prototyping:
+  ```powershell
+  .\.agent\setup.ps1
+  ```
+- **Author-Maintained OSS Preset (`mode: author-oss`):** Transforms the workspace for public community release:
+  ```powershell
+  .\.agent\setup.ps1 -Preset author-oss
+  ```
+  Or cross-platform via Python:
+  ```bash
+  python .agent/scaffold.py --preset author-oss
+  ```
+  This automatically scaffolds the complete open-source community surface (`LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.github/` issue forms, PR template, CI matrix workflow, and `.gitignore` dynamic junction exclusions) while configuring `mode: author-oss` in `AGENTS.md`.
+
 ---
 
 ## Global Skills vs. Workspace Domain Skills
