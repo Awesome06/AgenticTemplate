@@ -1,0 +1,30 @@
+name: Feature Request
+description: Propose an idea, API extension, or architectural enhancement
+title: "feat(scope): "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: Thank you for proposing a feature! Please provide context on the motivation and proposed design.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem Statement / Motivation
+      description: Is your feature request related to a problem or missing capability?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed Solution & Interface Design
+      description: Describe the design, proposed API signatures, or architecture changes.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternative Approaches Considered
+      description: What other designs or workarounds were evaluated?
+    validations:
+      false
+
