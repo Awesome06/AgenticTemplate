@@ -1,19 +1,19 @@
 #!/usr/bin/env pwsh
 # .agent/hooks/pre-commit.ps1
-# 1. Updates vendored submodules (.agent/.registry) from vault upstream.
+# 1. Discovers central machine skills vault (zero submodules).
 # 2. Analyzes repository stack signatures and context-corroborates skills into .agents/skills/ (Antigravity customization root).
 # 3. Lints wiki knowledge graph links.
 # 4. Executes fast local commit lint gate. Deep test suites run on pre-push.
 
-$repoRoot = git rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0 -or -not $repoRoot) { exit 0 }
+$repoRoot = git -C $PSScriptRoot rev-parse --show-toplevel 2>$null
+if (-not $repoRoot -or -not (Test-Path $repoRoot)) {
+    $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
+}
+if ($LASTEXITCODE -ne 0 -and -not $repoRoot) { exit 0 }
 Set-Location -Path $repoRoot
 
-$submodulePath = ".agent/.registry"
-$registryMapPath = "$submodulePath/skill-map.json"
 $activeSkillsPath = ".agent/.active-skills.json"
 $agentsSkillsDir = ".agents\skills"
-$legacySkillsDir = ".agent\skills"
 
 # ---------------------------------------------------------
 # Step 1: Discover Central Agent Skills Vault (Zero Submodule)
@@ -259,6 +259,10 @@ foreach ($dir in $currentAgentsSkills) {
 $state.active_skills = @($verifiedTargetSkills)
 
 if ($driftDetected) {
+    $parentDir = Split-Path $activeSkillsPath
+    if ($parentDir -and -not (Test-Path $parentDir)) {
+        New-Item -ItemType Directory -Path $parentDir -Force | Out-Null
+    }
     $state | ConvertTo-Json -Depth 4 | Set-Content -Path $activeSkillsPath -Encoding utf8
     Write-Host "Antigravity Sync: Active skills context-verified. Staging tracker..." -ForegroundColor Green
     git add $activeSkillsPath

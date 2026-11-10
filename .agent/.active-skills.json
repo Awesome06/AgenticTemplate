@@ -6,6 +6,7 @@
                           "arch/readme-craft",
                           "ops/self-upgrading-pipeline",
                           "domain/hackathon-governance",
-                          "ops/pr-craft"
+                          "ops/pr-craft",
+                          "ops/academic-artifact-evaluation"
                       ]
 }

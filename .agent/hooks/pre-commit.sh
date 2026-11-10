@@ -1,14 +1,13 @@
 #!/bin/sh
 # .agent/hooks/pre-commit.sh
-# 1. Updates vendored submodules (.agent/.registry) from vault upstream.
+# 1. Discovers central machine skills vault (zero submodules).
 # 2. Analyzes repository stack signatures and synchronizes skills into .agents/skills/ (Antigravity customization root).
 # 3. Lints wiki knowledge graph links.
 
-REPO_ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SCRIPT_DIR/../.." && pwd))
 cd "$REPO_ROOT" || exit 0
 
-SUBMODULE_PATH=".agent/.registry"
-REGISTRY_MAP="$SUBMODULE_PATH/skill-map.json"
 ACTIVE_SKILLS=".agent/.active-skills.json"
 AGENTS_SKILLS_DIR=".agents/skills"
 

@@ -42,9 +42,11 @@ wiki-graph.mermaid
 .agents/.skill-leases.json
 *.active-skills.json.bak
 
-# Competition video & agent scratch artifacts
-DEMO_VIDEO_SCRIPT.md
+# Competition video recordings & agent scratch artifacts
 demo-recording/
+*.mp4
+*.mov
+*.webm
 scratch/
 
 # Local secrets & credentials

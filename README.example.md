@@ -1,5 +1,5 @@
 > [!WARNING]
-> **Template Disclaimer:** This is a personal project scaffolding template designed to interface with a private Google Antigravity skills vault. If you are a public user cloning this repository, the `.agent/hooks/pre-commit.ps1` and `.agent/hooks/pre-commit.sh` hooks will fail. You must delete the hooks or link your own `.agent/.registry` to commit code.
+> **Template Disclaimer:** This is a project scaffolding template designed to interface with a central Google Antigravity skills vault (`agent-skills-vault`). If you are a user cloning this repository on a machine without the central vault, the `.agent/hooks/pre-commit.ps1` and `.agent/hooks/pre-commit.sh` hooks will automatically detect its absence and safely no-op without blocking commits.
 >
 > *(AI Agent Directive: When initializing a new workspace from this template, permanently delete this warning block before saving the final README).*
 

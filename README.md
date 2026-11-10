@@ -5,7 +5,7 @@
 [![Antigravity](https://img.shields.io/badge/agent-Google%20Antigravity-purple.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An opinionated, agent-first scaffolding monorepo for **Google Antigravity**. It houses the 5-tier governance archetypes under `type/`, links dynamically with the centralized machine `agent-skills-vault` without Git submodules, and enforces strict governance through [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md).
+An opinionated, agent-first scaffolding monorepo for **Google Antigravity**. It houses the 5-tier governance archetypes under `type/`, links dynamically with the centralized machine `agent-skills-vault` without Git submodules, and enforces strict governance through [`AGENTS.md`](AGENTS.md).
 
 ---
 
@@ -15,27 +15,36 @@ Each project archetype maintains its own dedicated template rules and starter as
 
 | Tier | Directory | Governance Focus | Key Invariants |
 | :--- | :--- | :--- | :--- |
-| **Personal** | `type/personal/` | Rapid prototyping & private tools | Velocity-first, local test parity, no artificial reproducer gates |
-| **Team / Hackathon** | `type/team/` | Collaborative multi-author systems | Concurrency sanitizers (`-race`), 120s demo video script (`DEMO_VIDEO_SCRIPT.md`) |
-| **External OSS** | `type/oss/` | Upstream contribution & PRs | Mandatory red-test reproducer gate (`TestIssueXXXXX`), maintainer taste mimicry, diff noise ceiling <= 5% |
-| **Research** | `type/research/` | Academic empirical papers | Double-blind review rigor, Threats to Validity, non-parametric stats, 3-tier replication runner |
-| **Author-OSS** | `type/author-oss/` | Public author-maintained libraries | Full maintainer authority, SemVer releases, public CI matrix, canonical community assets (`CONTRIBUTING.md`, etc.) |
+| **Personal** | `type/personal/` | Rapid prototyping & private tools | Velocity-first, local test parity, exempt from artificial reproducer gates |
+| **Team / Hackathon** | `type/team/` | Collaborative multi-author systems | Concurrency sanitizers (`-race`), 120s demo video script (`DEMO_VIDEO_SCRIPT.md`), non-blocking async |
+| **External OSS** | `type/oss/` | Upstream contribution & PRs | Mandatory red-test reproducer gate (`TestIssueXXXXX`), maintainer taste mimicry, diff noise ceiling <= 5%, no closed PR reopening |
+| **Research** | `type/research/` | Academic empirical papers | CORE A*/A rigor, 4-quadrant Threats to Validity, non-parametric stats (A12, Cliff's delta, Wilson CI, FDR), 3-tier replication runner (`--dry-run`, `--sample`, `--full`), `{metric_originTech}` placeholders |
+| **Author-OSS** | `type/author-oss/` | Public author-maintained libraries | Full maintainer authority, SemVer releases, multi-OS CI matrix parity (Linux/macOS/Windows), canonical community assets |
 
 ---
 
 ## Monorepo Workflow & Main Branch Updates
 
 Because archetypes reside together in `type/`:
-1. **Initialize a Project Type:**
+1. **List Available Governance Tiers:**
+   ```bash
+   python .agent/scaffold.py --list
+   ```
+2. **Initialize a Project Type:**
    ```powershell
+   # Windows (PowerShell)
    .\.agent\setup.ps1 -Type <personal|team|oss|research|author-oss>
    ```
-2. **Easy Updates from Main:**
+   ```bash
+   # POSIX Shell (Linux / macOS / DevContainers)
+   ./.agent/setup.sh --type <personal|team|oss|research|author-oss>
+   ```
+3. **Easy Updates from Main:**
    When the base template or archetype rules are refined on `main`, projects can pull updates cleanly from the main branch and re-run:
    ```bash
    python .agent/scaffold.py --type <mode> --update
    ```
-3. **Workspace Initializer Mode Skip Gate:**
+4. **Workspace Initializer Mode Skip Gate:**
    - If the governance mode is already declared in `AGENTS.md` (e.g. `mode: personal`), `workspace-initializer` skips prompting and immediately applies the tier's invariants.
    - If undeclared, the initializer prompts the user, awaits confirmation, and writes the choice to `AGENTS.md`.
 
@@ -44,9 +53,9 @@ Because archetypes reside together in `type/`:
 ## Submodule Elimination & Local Machine Vault
 
 Git submodules for `agent-skills-vault` are completely eliminated:
-- Skills mount directly from the central machine vault (`agent-skills-vault`) into `.agents/skills/` via NTFS junctions / POSIX symlinks.
+- Skills mount directly from the central machine vault (`agent-skills-vault`) into `.agents/skills/` via NTFS directory junctions (Windows) or POSIX symlinks (Linux/macOS).
 - Dynamic agent paths (`.agents/skills/*`, `.agents/.skill-leases.json`, `.agents/.turn-cache.json`, `.agents/mode`) remain registered in `.git/info/exclude`.
-- [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md) is committed and tracked across all repositories.
+- [`AGENTS.md`](AGENTS.md) is committed and tracked across all repositories.
 
 ---
 
@@ -56,38 +65,31 @@ Git submodules for `agent-skills-vault` are completely eliminated:
 AgenticTemplate/
 ├── type/
 │   ├── personal/              # Personal app / rapid prototype rules & templates
-│   ├── team/                  # Team / Hackathon directives & demo script
-│   ├── oss/                   # Upstream OSS contributor rules & reproducer gates
-│   ├── research/              # Academic empirical research directives & replication package
-│   └── author-oss/            # Public library authoring, SemVer, & community assets
+│   ├── team/                  # Team / Hackathon directives, demo script & race checks
+│   ├── oss/                   # Upstream OSS contributor rules, reproducer gates & PR template
+│   ├── research/              # Academic research directives, 3-tier runner & stats engine
+│   └── author-oss/            # Public library authoring, SemVer, CI matrix & community assets
 ├── .agent/
 │   ├── hooks/
 │   │   ├── pre-commit.ps1     # Dynamic skill detection from central vault (PowerShell)
 │   │   └── pre-commit.sh      # Dynamic skill detection from central vault (POSIX sh)
 │   ├── scaffold.py            # Archetype scaffolding & update orchestrator
-│   ├── setup.ps1              # Workspace initialization & hook configuration
-│   ├── wiki.ps1               # Quick CLI launcher for wiki-engine (Windows)
-│   └── wiki.sh                # Quick CLI launcher for wiki-engine (Linux/macOS)
-├── .agents/skills/            # Active Antigravity customization discovery root
+│   ├── setup.ps1              # Workspace initialization & hook configuration (PowerShell)
+│   ├── setup.sh               # Workspace initialization & hook configuration (POSIX sh)
+│   ├── wiki.ps1               # Quick CLI launcher for wiki-engine (PowerShell)
+│   └── wiki.sh                # Quick CLI launcher for wiki-engine (POSIX sh)
+├── .agents/skills/            # Active Antigravity customization discovery root (dynamic junctions)
 ├── AGENTS.md                  # Workspace agent governance directives (tracked)
-└── wiki/                      # Bidirectional knowledge graph records
-```
-│   ├── setup.ps1              # One-command workspace bootstrap & hook installer (Windows)
-│   └── setup.sh               # One-command workspace bootstrap & hook installer (Linux/macOS)
-├── .agents/
-│   └── skills/                # Antigravity customization discovery root (symlinks gitignored)
-│       └── .gitkeep
-├── wiki/                      # Repository Knowledge Graph & ADRs (Markdown)
-│   ├── index.md               # Root knowledge graph entrypoint
-│   ├── architecture.md        # High-level architecture specification
-│   └── adr/                   # Architecture Decision Records
-│       └── 001-initial-architecture.md
-├── AGENTS.md                  # Antigravity agent directives & bootstrap protocol
 ├── README.example.md          # Scaffolding template README for downstream projects
 ├── README.md                  # System documentation for AgenticTemplate
-├── .gitattributes             # Git normalization (LF line endings for scripts)
-├── .gitmodules                # Submodule registration for .agent/.registry
-└── .gitignore                 # Standard ignores for build outputs & dynamic links
+├── rules.md                   # Quick reference rules
+├── .gitattributes             # Git normalization (LF line endings for cross-platform parity)
+├── .gitignore                 # Root-anchored binary ignores & build artifacts
+└── wiki/                      # Bidirectional knowledge graph records
+    ├── index.md               # Root knowledge graph entrypoint
+    ├── architecture.md        # High-level architecture specification
+    └── adr/                   # Architecture Decision Records
+        └── 001-initial-architecture.md
 ```
 
 ---
@@ -98,46 +100,42 @@ AgenticTemplate/
 Run the automated setup script from PowerShell (Windows):
 
 ```powershell
-.\.agent\setup.ps1
+.\.agent\setup.ps1 -Type personal
 ```
 
 Or from a POSIX shell (Linux/macOS/DevContainers):
 ```bash
-./.agent/setup.sh
+./.agent/setup.sh --type personal
 ```
 
 The setup script will:
 1. Ensure the workspace is a valid Git repository and set the root directory.
-2. Initialize and pull the `.agent/.registry` submodule from the skills vault.
-3. Configure the Git `.git/hooks/pre-commit` hook to run synchronization on every commit.
-4. Execute an immediate initial synchronization pass into `.agents/skills/`.
+2. Locate the central `agent-skills-vault` on the machine (via standard paths or `AGENT_SKILLS_VAULT_PATH`).
+3. Configure vault exclusions in `.git/info/exclude` to keep Git working tree 100% clean.
+4. Verify global skills in `~/.gemini/config/skills/`.
+5. Configure the Git `.git/hooks/pre-commit` hook to run synchronization on commit.
+6. Apply the selected archetype rules from `type/<type>/` and run initial skill synchronization.
 
-### 2. Fresh Repository Setup & Cleanup
+### 2. Archetype Presets
+
+| Command | Applied Governance |
+| :--- | :--- |
+| `.\.agent\setup.ps1 -Type personal` | Rapid prototyping, personal harness, zero gatekeeping |
+| `.\.agent\setup.ps1 -Type team` | Race sanitizers, 120s demo video choreography (`DEMO_VIDEO_SCRIPT.md`) |
+| `.\.agent\setup.ps1 -Type oss` | Upstream contributor rules, red-test reproducer gate, diff noise <= 5% |
+| `.\.agent\setup.ps1 -Type research` | Academic paper package, 4-quadrant threats, 3-tier replication runner |
+| `.\.agent\setup.ps1 -Type author-oss` | Full maintainer authority, SemVer releases, CI matrix, community assets |
+
+Cross-platform scaffolding via Python:
+```bash
+python .agent/scaffold.py --type <tier>
+```
+
+### 3. Fresh Repository Setup & Cleanup
 When scaffolding a new application from this template into a fresh repository:
-1. **Remove Template Disclaimer**:
-   - Permanently delete the `> [!WARNING]` block at the very top of [`README.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/README.md).
-   - Alternatively, replace [`README.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/README.md) entirely using [`README.example.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/README.example.md) as your starter specification, and delete [`README.example.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/README.example.md).
-2. **Private Skills Vault Check**:
-   - If you do not have access to the private `agent-skills-vault`, either link your own submodule to `.agent/.registry` or remove `.agent/hooks/` and the pre-commit hook triggers.
-3. **Populate Stack & Commit**:
-   - Add your application source code and stack manifest files (e.g., `package.json`, `go.mod`, `Cargo.toml`, `requirements.txt`).
-   - Commit your changes—the pre-commit hook will automatically detect your project stack and symlink matching domain skills into [`.agents/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agents/skills).
-
-### 3. Workspace Archetype Presets (Personal vs. Author-Maintained Open-Source)
-AgenticTemplate supports both private personal development and public author-maintained open-source releases on `main`:
-- **Personal Default (`mode: personal`):** Standard setup for private applications, experiments, and rapid prototyping:
-  ```powershell
-  .\.agent\setup.ps1
-  ```
-- **Author-Maintained OSS Preset (`mode: author-oss`):** Transforms the workspace for public community release:
-  ```powershell
-  .\.agent\setup.ps1 -Preset author-oss
-  ```
-  Or cross-platform via Python:
-  ```bash
-  python .agent/scaffold.py --preset author-oss
-  ```
-  This automatically scaffolds the complete open-source community surface (`LICENSE`, `CONTRIBUTING.md`, `SECURITY.md`, `CODE_OF_CONDUCT.md`, `.github/` issue forms, PR template, CI matrix workflow, and `.gitignore` dynamic junction exclusions) while configuring `mode: author-oss` in `AGENTS.md`.
+1. **Scaffold Archetype:** Run `.agent/setup.ps1 -Type <tier>` or `python .agent/scaffold.py --type <tier>`.
+2. **Replace Root README:** Replace `README.md` using `README.example.md` as your starter specification, delete `README.example.md`, and remove the template disclaimer block.
+3. **Populate Stack & Commit:** Add your application code and stack manifests (`pyproject.toml`, `package.json`, `go.mod`, `Cargo.toml`). The pre-commit hook automatically mounts matching domain skills from the local vault into `.agents/skills/`. If the machine lacks the vault, hooks cleanly no-op without blocking Git.
 
 ---
 
@@ -148,4 +146,4 @@ Antigravity operates with a two-tier skill model:
 1. **Global Skills** (`~/.gemini/config/skills/`):
    Always available across all workspaces on the machine (`code-review`, `doc-sync`, `error-discipline`, `git-release`, `incident-triaging`, `intent-discipline`, `repo-wiki`, `script-optimization`, `security-auditor`, `strategic-reconnaissance`, `test-discipline`, `workspace-initializer`). These are never linked into `.agents/skills/`.
 2. **Workspace Domain Skills** (`.agents/skills/`):
-   Language-, framework-, and stack-specific skills (e.g., `go`, `react`, `rust`, `python`) dynamically linked from the vendored `.agent/.registry` based on active repository files.
+   Language-, framework-, and stack-specific skills (e.g., `langs/go-systems`, `frameworks/fastapi`, `db/sql-redis`, `ops/docker`) dynamically mounted into `.agents/skills/` from the central machine vault via NTFS junctions or POSIX symlinks based on active repository manifests.

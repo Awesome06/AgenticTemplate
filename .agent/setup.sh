@@ -2,7 +2,27 @@
 # setup.sh - Antigravity Agent & Git Hook Setup (POSIX)
 set -e
 
-TYPE="${1:-personal}"
+TYPE="personal"
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --list|-l)
+            if [ -f ".agent/scaffold.py" ]; then
+                python3 .agent/scaffold.py --list 2>/dev/null || python .agent/scaffold.py --list
+                exit 0
+            fi
+            ;;
+        --type|-t|--preset|-p|-Type|-Preset)
+            TYPE="$2"
+            shift 2
+            ;;
+        *)
+            if [ -n "$1" ] && [ "${1#-}" = "$1" ]; then
+                TYPE="$1"
+            fi
+            shift
+            ;;
+    esac
+done
 
 echo "Configuring Antigravity Workspace..."
 

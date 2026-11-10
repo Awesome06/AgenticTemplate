@@ -2,19 +2,35 @@
 [CmdletBinding()]
 param(
     [ValidateSet("personal", "team", "oss", "research", "author-oss")]
-    [string]$Type = "personal"
+    [Alias("Preset")]
+    [string]$Type = "personal",
+    [switch]$List
 )
 
 $ErrorActionPreference = "Stop"
+
+# 1. Resolve workspace root and set location
+$repoRoot = git -C $PSScriptRoot rev-parse --show-toplevel 2>$null
+if (-not $repoRoot -or -not (Test-Path $repoRoot)) {
+    $repoRoot = Split-Path -Parent $PSScriptRoot
+}
+Set-Location -Path $repoRoot
+
+if ($List) {
+    if (Test-Path ".agent/scaffold.py") {
+        python .agent/scaffold.py --list
+        exit 0
+    }
+}
+
 Write-Host "Configuring Antigravity Workspace..." -ForegroundColor Cyan
 
-# 1. Verify Git availability and repository state
-$repoRoot = git rev-parse --show-toplevel 2>$null
-if ($LASTEXITCODE -ne 0 -or -not $repoRoot) {
+# 2. Verify Git availability and repository state
+$gitCheck = git rev-parse --show-toplevel 2>$null
+if ($LASTEXITCODE -ne 0 -or -not $gitCheck) {
     Write-Error "Not a git repository. Run 'git init' before setup."
     exit 1
 }
-Set-Location -Path $repoRoot
 
 # 2. Locate Central Agent Skills Vault
 $centralVault = $env:AGENT_SKILLS_VAULT_PATH
