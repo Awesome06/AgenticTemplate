@@ -1,70 +1,107 @@
 #!/usr/bin/env python3
 """
-.agent/scaffold.py - Workspace Preset Scaffolding Launcher for AgenticTemplate.
+.agent/scaffold.py - Monorepo Project Archetype Scaffolding for AgenticTemplate.
 
-Applies project presets (such as 'author-oss' for public open-source releases)
-to transform a freshly instantiated template workspace.
+Applies project archetypes from `type/<type>/` across the 5-tier governance architecture:
+1. personal   - Rapid prototyping, private developer harness.
+2. team       - Collaborative multi-author development, race sanitizers, 120s demo video.
+3. oss        - External open-source contributor rules, red-test reproducer gate.
+4. research   - Academic double-blind review rigor, Threats to Validity, statistical rigor.
+5. author-oss - Author-maintained public open source, SemVer release tagging, canonical community surface.
 """
 
 import argparse
-import subprocess
+import shutil
 import sys
 from pathlib import Path
 
-SCRIPT_DIR = Path(__file__).resolve().parent
-REPO_ROOT = SCRIPT_DIR.parent
-VAULT_SCAFFOLD = REPO_ROOT / ".agent" / ".registry" / "scripts" / "scaffold-oss.py"
+REPO_ROOT = Path(__file__).resolve().parent.parent
+TYPE_DIR = REPO_ROOT / "type"
+VALID_TYPES = ["personal", "team", "oss", "research", "author-oss"]
+
+
+def apply_archetype(target_type: str, force: bool = False, update_only: bool = False) -> None:
+    if target_type not in VALID_TYPES:
+        print(f"[scaffold] Error: Invalid project type '{target_type}'. Valid choices: {', '.join(VALID_TYPES)}", file=sys.stderr)
+        sys.exit(1)
+
+    archetype_dir = TYPE_DIR / target_type
+    if not archetype_dir.is_dir():
+        print(f"[scaffold] Error: Archetype directory not found at {archetype_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    print(f"[scaffold] Applying archetype: {target_type}")
+
+    # 1. Update/Write AGENTS.md
+    src_agents = archetype_dir / "AGENTS.md"
+    dst_agents = REPO_ROOT / "AGENTS.md"
+    if src_agents.is_file():
+        if not dst_agents.exists() or force or update_only:
+            shutil.copy2(src_agents, dst_agents)
+            print(f"[scaffold] Synced AGENTS.md for {target_type}")
+        else:
+            # Ensure frontmatter mode is updated if AGENTS.md exists
+            content = dst_agents.read_text(encoding="utf-8")
+            if not content.startswith(f"---\nmode: {target_type}\n---"):
+                if content.startswith("---"):
+                    # Replace frontmatter
+                    parts = content.split("---", 2)
+                    if len(parts) >= 3:
+                        new_content = f"---\nmode: {target_type}\n---" + parts[2]
+                    else:
+                        new_content = f"---\nmode: {target_type}\n---\n" + content
+                else:
+                    new_content = f"---\nmode: {target_type}\n---\n" + content
+                dst_agents.write_text(new_content, encoding="utf-8")
+                print(f"[scaffold] Updated mode to '{target_type}' in AGENTS.md frontmatter")
+
+    # 2. Write mode marker
+    agents_dir = REPO_ROOT / ".agents"
+    agents_dir.mkdir(parents=True, exist_ok=True)
+    mode_file = agents_dir / "mode"
+    mode_file.write_text(target_type, encoding="utf-8")
+    print(f"[scaffold] Wrote .agents/mode -> {target_type}")
+
+    # 3. Copy archetype assets (README, community files, scripts)
+    for src_file in archetype_dir.rglob("*"):
+        if src_file.is_file() and src_file.name != "AGENTS.md":
+            rel_path = src_file.relative_to(archetype_dir)
+            target_dest = REPO_ROOT / rel_path
+
+            if target_dest.exists() and not force:
+                continue
+
+            target_dest.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src_file, target_dest)
+            print(f"[scaffold] Scaffolding {rel_path}")
+
+    print(f"[scaffold] Project successfully initialized with {target_type} governance rules.")
 
 
 def main():
-    parser = argparse.ArgumentParser(description="AgenticTemplate Workspace Preset Scaffolding.")
+    parser = argparse.ArgumentParser(description="AgenticTemplate Monorepo Project Archetype Scaffolder.")
     parser.add_argument(
-        "--preset",
-        "-p",
-        choices=["personal", "author-oss"],
-        default="author-oss",
-        help="Workspace preset archetype (default: author-oss)",
+        "--type",
+        "-t",
+        choices=VALID_TYPES,
+        default="personal",
+        help="Project governance type (default: personal)",
     )
-    parser.add_argument("--name", "-n", default=None, help="Project name (default: directory name)")
-    parser.add_argument("--license", "-l", choices=["apache-2.0", "mit"], default="apache-2.0", help="License type")
-    parser.add_argument("--dry-run", action="store_true", help="Print actions without modifying files")
-    parser.add_argument("--force", "-f", action="store_true", help="Overwrite existing assets")
+    parser.add_argument(
+        "--force",
+        "-f",
+        action="store_true",
+        help="Overwrite existing workspace files",
+    )
+    parser.add_argument(
+        "--update",
+        "-u",
+        action="store_true",
+        help="Update rules in-place from archetype without replacing custom files",
+    )
     args = parser.parse_args()
 
-    if args.preset == "personal":
-        print("[scaffold] Personal preset is the template default. No scaffolding changes required.")
-        return
-
-    if not VAULT_SCAFFOLD.is_file():
-        # Attempt to initialize submodule
-        print("[scaffold] .agent/.registry submodule not initialized. Initializing...")
-        try:
-            subprocess.run(["git", "submodule", "update", "--init", "--recursive"], cwd=str(REPO_ROOT), check=True)
-        except Exception as e:
-            print(f"[scaffold] Error initializing submodule: {e}", file=sys.stderr)
-            sys.exit(1)
-
-    if not VAULT_SCAFFOLD.is_file():
-        print(f"[scaffold] Error: Scaffolding script not found at {VAULT_SCAFFOLD}", file=sys.stderr)
-        sys.exit(1)
-
-    cmd = [
-        sys.executable,
-        str(VAULT_SCAFFOLD),
-        "--workspace",
-        str(REPO_ROOT),
-        "--license",
-        args.license,
-    ]
-    if args.name:
-        cmd.extend(["--name", args.name])
-    if args.dry_run:
-        cmd.append("--dry-run")
-    if args.force:
-        cmd.append("--force")
-
-    ret = subprocess.call(cmd)
-    sys.exit(ret)
+    apply_archetype(args.type, force=args.force, update_only=args.update)
 
 
 if __name__ == "__main__":

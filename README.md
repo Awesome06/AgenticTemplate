@@ -1,48 +1,52 @@
-> [!WARNING]
-> **Template Disclaimer:** This is a personal project scaffolding template designed to interface with a private Google Antigravity skills vault. If you are a public user cloning this repository, the `.agent/hooks/pre-commit.ps1` and `.agent/hooks/pre-commit.sh` hooks will fail. You must delete the hooks or link your own `.agent/.registry` to commit code.
->
-> *(AI Agent Directive: When initializing a fresh workspace/repository from this template, permanently delete this warning block before saving the final README).*
-
-# AgenticTemplate
+# AgenticTemplate (Monorepo Project Archetypes)
 
 [![Status](https://img.shields.io/badge/status-active-brightgreen.svg)]()
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS-blue.svg)]()
 [![Antigravity](https://img.shields.io/badge/agent-Google%20Antigravity-purple.svg)]()
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-An opinionated, agent-first repository scaffolding template for **Google Antigravity**. It couples a project workspace with a centralized agent skills vault, automates stack-aware skill discovery via Git pre-commit hooks, and enforces strict agent engineering governance through [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md).
+An opinionated, agent-first scaffolding monorepo for **Google Antigravity**. It houses the 5-tier governance archetypes under `type/`, links dynamically with the centralized machine `agent-skills-vault` without Git submodules, and enforces strict governance through [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md).
 
 ---
 
-## Architecture & Lifecycle
+## 5-Tier Governance Architecture (`type/`)
 
-```mermaid
-graph TD
-    A[New Project from Template] --> B[Run .agent/setup.ps1 or setup.sh]
-    B --> C[Init .agent/.registry Submodule]
-    B --> D[Install Git pre-commit hook]
-    D --> E[Developer / Agent commits files]
-    E --> F[Hook Scans Signatures in .agent/.registry/skill-map.json]
-    F --> G[Symlink / Junction Domain Skills into .agents/skills/]
-    G --> H[Update .agent/.active-skills.json]
-    H --> I[Antigravity Agent Discovers Active Domain Skills]
-    I --> J[Enforce Directives in AGENTS.md]
-```
+Each project archetype maintains its own dedicated template rules and starter assets in `type/<tier>/`:
+
+| Tier | Directory | Governance Focus | Key Invariants |
+| :--- | :--- | :--- | :--- |
+| **Personal** | `type/personal/` | Rapid prototyping & private tools | Velocity-first, local test parity, no artificial reproducer gates |
+| **Team / Hackathon** | `type/team/` | Collaborative multi-author systems | Concurrency sanitizers (`-race`), 120s demo video script (`DEMO_VIDEO_SCRIPT.md`) |
+| **External OSS** | `type/oss/` | Upstream contribution & PRs | Mandatory red-test reproducer gate (`TestIssueXXXXX`), maintainer taste mimicry, diff noise ceiling <= 5% |
+| **Research** | `type/research/` | Academic empirical papers | Double-blind review rigor, Threats to Validity, non-parametric stats, 3-tier replication runner |
+| **Author-OSS** | `type/author-oss/` | Public author-maintained libraries | Full maintainer authority, SemVer releases, public CI matrix, canonical community assets (`CONTRIBUTING.md`, etc.) |
 
 ---
 
-## Core Capabilities
+## Monorepo Workflow & Main Branch Updates
 
-- **Automated Stack & Skill Discovery**:
-  When files are committed, `.agent/hooks/pre-commit.ps1` (or POSIX `.agent/hooks/pre-commit.sh`) scans the repository for language and framework markers (e.g., `go.mod`, `package.json`, `Cargo.toml`, `requirements.txt`). It automatically symlinks matching domain skills from `.agent/.registry` into `.agents/skills/` (Antigravity's native workspace customization root).
-- **Zero-Friction Windows & POSIX Support**:
-  Hooks and setup scripts seamlessly handle Windows Developer Mode symlinks with automatic fallback to NTFS directory junctions (`mklink /J`), alongside standard POSIX symlinks (`ln -s`) for Linux, macOS, and DevContainers.
-- **Strict Agent Governance**:
-  [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md) defines explicit protocol steps for AI coding agents on initialization: verifying Git hooks, running initial skill discovery, keeping context windows lean, and requiring testing/linting before staging code changes.
-- **Clean Root Architecture**:
-  Orchestration scripts, submodules, hook triggers, and manifest state live encapsulated under `.agent/`, while IDE customization discovery lives in [`.agents/skills/`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/.agents/skills).
-- **In-House Repository Knowledge Graph**:
-  Built-in support for atomic documentation, architecture decision records (ADRs), and bidirectional wikilinks in `wiki/`. Verified via pre-commit linting to ensure zero dead links. Subgraph queries and interactive HTML graph visualization powered by the zero-dependency `.agent/wiki.ps1` (or `wiki.sh`) tool.
+Because archetypes reside together in `type/`:
+1. **Initialize a Project Type:**
+   ```powershell
+   .\.agent\setup.ps1 -Type <personal|team|oss|research|author-oss>
+   ```
+2. **Easy Updates from Main:**
+   When the base template or archetype rules are refined on `main`, projects can pull updates cleanly from the main branch and re-run:
+   ```bash
+   python .agent/scaffold.py --type <mode> --update
+   ```
+3. **Workspace Initializer Mode Skip Gate:**
+   - If the governance mode is already declared in `AGENTS.md` (e.g. `mode: personal`), `workspace-initializer` skips prompting and immediately applies the tier's invariants.
+   - If undeclared, the initializer prompts the user, awaits confirmation, and writes the choice to `AGENTS.md`.
+
+---
+
+## Submodule Elimination & Local Machine Vault
+
+Git submodules for `agent-skills-vault` are completely eliminated:
+- Skills mount directly from the central machine vault (`agent-skills-vault`) into `.agents/skills/` via NTFS junctions / POSIX symlinks.
+- Dynamic agent paths (`.agents/skills/*`, `.agents/.skill-leases.json`, `.agents/.turn-cache.json`, `.agents/mode`) remain registered in `.git/info/exclude`.
+- [`AGENTS.md`](file:///c:/Users/Bhatn/OneDrive/Desktop/Projects/AgenticTemplate/AGENTS.md) is committed and tracked across all repositories.
 
 ---
 
@@ -50,14 +54,24 @@ graph TD
 
 ```text
 AgenticTemplate/
+├── type/
+│   ├── personal/              # Personal app / rapid prototype rules & templates
+│   ├── team/                  # Team / Hackathon directives & demo script
+│   ├── oss/                   # Upstream OSS contributor rules & reproducer gates
+│   ├── research/              # Academic empirical research directives & replication package
+│   └── author-oss/            # Public library authoring, SemVer, & community assets
 ├── .agent/
-│   ├── .registry/             # Git submodule: centralized agent-skills-vault
 │   ├── hooks/
-│   │   ├── pre-commit.ps1     # Submodule auto-sync & skill detection (PowerShell)
-│   │   └── pre-commit.sh      # Submodule auto-sync & skill detection (POSIX sh)
+│   │   ├── pre-commit.ps1     # Dynamic skill detection from central vault (PowerShell)
+│   │   └── pre-commit.sh      # Dynamic skill detection from central vault (POSIX sh)
+│   ├── scaffold.py            # Archetype scaffolding & update orchestrator
+│   ├── setup.ps1              # Workspace initialization & hook configuration
 │   ├── wiki.ps1               # Quick CLI launcher for wiki-engine (Windows)
-│   ├── wiki.sh                # Quick CLI launcher for wiki-engine (Linux/macOS)
-│   ├── .active-skills.json    # Manifest of currently active workspace skills
+│   └── wiki.sh                # Quick CLI launcher for wiki-engine (Linux/macOS)
+├── .agents/skills/            # Active Antigravity customization discovery root
+├── AGENTS.md                  # Workspace agent governance directives (tracked)
+└── wiki/                      # Bidirectional knowledge graph records
+```
 │   ├── setup.ps1              # One-command workspace bootstrap & hook installer (Windows)
 │   └── setup.sh               # One-command workspace bootstrap & hook installer (Linux/macOS)
 ├── .agents/
