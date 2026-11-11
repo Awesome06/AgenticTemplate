@@ -12,6 +12,12 @@ if (-not $repoRoot -or -not (Test-Path $repoRoot)) {
 if ($LASTEXITCODE -ne 0 -and -not $repoRoot) { exit 0 }
 Set-Location -Path $repoRoot
 
+# If repository is the central skill vault itself, never link skills into .agents/skills/
+$repoLeaf = (Split-Path $repoRoot -Leaf).ToLower()
+if ($repoLeaf -eq "agent-skills-vault") {
+    exit 0
+}
+
 $activeSkillsPath = ".agent/.active-skills.json"
 $agentsSkillsDir = ".agents\skills"
 
@@ -215,6 +221,14 @@ function Link-SkillDirectory([string]$linkTarget, [string]$destinationDir, [stri
 }
 
 foreach ($req in $verifiedTargetSkills) {
+    # Project Skill Isolation: only mount projects/<proj>/* in matching repository
+    if ($req -match '^projects/([^/]+)/') {
+        $projName = $Matches[1]
+        if ($repoLeaf -ne $projName.ToLower()) {
+            continue
+        }
+    }
+
     $folderName = Split-Path $req -Leaf
     if ($folderName -in $globalSkills -or (Test-Path (Join-Path $localVault "globals\$folderName"))) { continue }
 

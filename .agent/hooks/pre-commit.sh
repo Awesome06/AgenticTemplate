@@ -8,6 +8,11 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 REPO_ROOT=$(git -C "$SCRIPT_DIR" rev-parse --show-toplevel 2>/dev/null || (cd "$SCRIPT_DIR/../.." && pwd))
 cd "$REPO_ROOT" || exit 0
 
+repo_base=$(basename "$REPO_ROOT" | tr '[:upper:]' '[:lower:]')
+if [ "$repo_base" = "agent-skills-vault" ]; then
+    exit 0
+fi
+
 ACTIVE_SKILLS=".agent/.active-skills.json"
 AGENTS_SKILLS_DIR=".agents/skills"
 
@@ -119,6 +124,15 @@ DRIFT_DETECTED=0
 ACTIVE_LIST=""
 
 for skill in $UNIQUE_SKILLS; do
+    case "$skill" in
+        projects/*)
+            proj_name=$(echo "$skill" | cut -d'/' -f2)
+            if [ "$repo_base" != "$proj_name" ]; then
+                continue
+            fi
+            ;;
+    esac
+
     folder_name=$(basename "$skill")
     if [ -d "$LOCAL_VAULT/globals/$folder_name" ]; then
         continue
